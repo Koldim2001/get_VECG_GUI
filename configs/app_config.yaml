@@ -12,6 +12,8 @@ hydra:
 
 # --------------------------------------------- Предустановленные параметры -----------------------------------------------------
 
+logo: configs/bmt_logo_black.png
+
 draw_segmentation: True
 n_term_start: 3 
 filt: True
@@ -24,7 +26,7 @@ T_loop_area: False
 count_qrst_angle: False
 mean_filter: True
 predict_res: True
-show_ECG: True
+show_ECG: False
 
 
 # --------------------------------------------- Диапазоны параметров -----------------------------------------------------

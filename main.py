@@ -125,7 +125,7 @@ def main(config: dict) -> None:
 
     window = tkinter.Tk()
     window.title("Получение ВЭКГ")
-    icon = tkinter.PhotoImage(file='configs/bmt_logo_black.png')
+    icon = tkinter.PhotoImage(file=config['logo'])
     window.iconphoto(True, icon)
     
     # Создание главного окна приложения

@@ -11,7 +11,6 @@ import neurokit2 as nk
 import plotly.express as px
 from shapely.geometry import Polygon
 import plotly.graph_objects as go
-import click
 import torch
 from torchvision import transforms
 from models_for_inference.model import *
@@ -588,7 +587,6 @@ def get_VECG(input_data: dict):
     plt.ioff()
     plt.show()
 
-    
     return area_projections, angle_qrst, angle_qrst_front, message_predict
 
 
