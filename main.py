@@ -56,10 +56,9 @@ def main(config: dict) -> None:
 
             message = []
             if res == 'no_this_period':
-                print('WARNING')
+                tkinter.messagebox.showerror("Ошибка", "Не найден такой период. Попробуйте ввести меньше значение")
             if res == 'too_noisy':
-                print('WARNING')
-
+                tkinter.messagebox.showerror("Ошибка", "Не получилось построить ВЭКГ, так как ЭКГ слишком шумный")
             if len(res) == 4:
                 area_projections, angle_qrst, angle_qrst_front, message_predict = res
                 if input_data["predict"]:
@@ -78,9 +77,17 @@ def main(config: dict) -> None:
                     message.append(f'Площадь петли ST-T во аксиальной плоскости: {"{:.3e}".format(area_projections[2])}')
                 if input_data["count_qrst_angle"]:
                     message.append(f'Пространственный угол QRST равен {round(angle_qrst, 2)} градусов')
-                    message.append(f'Проекция угла QRST на фронтальную плоскость равна {round(angle_qrst_front, 2)} градусов')
-                for text in message:
-                    print(text)
+                    #message.append(f'Проекция угла QRST на фронтальную плоскость равна {round(angle_qrst_front, 2)} градусов')
+
+
+                for widget in res_frame.winfo_children():
+                    widget.destroy()
+
+                # Вывод результатов:
+                for i, text in enumerate(message):
+                    label = tkinter.Label(res_frame, text=text)
+                    label.grid(row=i, column=0, sticky="w")
+
 
         else:
             tkinter.messagebox.showwarning("Ошибка", "Не выбран файл")
@@ -125,7 +132,7 @@ def main(config: dict) -> None:
 
     # Основное поле
     info_frame =tkinter.LabelFrame(frame, text="")
-    info_frame.grid(row= 0, column=0, padx=10, pady=10)
+    info_frame.grid(row= 0, column=0, padx=10, pady=5)
 
     n_term_text = tkinter.Label(info_frame, text="Номер периода ЭКГ")
     n_term_start = tkinter.Spinbox(info_frame, from_=config['n_term_begin'],
@@ -146,7 +153,7 @@ def main(config: dict) -> None:
 
     # Поле выбора режимов
     type_frame = tkinter.LabelFrame(frame, text="Выбор режимов")
-    type_frame.grid(row=1, column=0, sticky="news", padx=20, pady=10)
+    type_frame.grid(row=1, column=0, sticky="news", padx=20, pady=5)
 
     plot_projections = tkinter.BooleanVar(value=config['plot_projections'])
     plot_projections_check = tkinter.Checkbutton(type_frame, text= "Построение проекций ВЭКГ",
@@ -197,7 +204,7 @@ def main(config: dict) -> None:
 
     # Поле настроек
     settings_frame = tkinter.LabelFrame(frame, text="Настройки")
-    settings_frame.grid(row=2, column=0, sticky="news", padx=20, pady=10)
+    settings_frame.grid(row=2, column=0, sticky="news", padx=20, pady=5)
 
     mean_filter = tkinter.BooleanVar(value=config['mean_filter'])
     mean_filter_check = tkinter.Checkbutton(settings_frame, text= "Сглаживание петель",
@@ -231,9 +238,12 @@ def main(config: dict) -> None:
     button = tkinter.Button(frame, text="Запуск", bg="#0074D9", fg="white",
                             font=custom_font,  command=enter_data)
     button.grid(row=3, column=0, sticky="news", padx=30, pady=10)
-    
-    window.mainloop()
+   
 
+    res_frame = tkinter.LabelFrame(frame, text="Результаты")
+    res_frame.grid(row=4, column=0, sticky="news", padx=30, pady=5)
+ 
+    window.mainloop()
 
 
 if __name__ == "__main__":

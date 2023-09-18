@@ -394,6 +394,21 @@ def get_VECG(input_data: dict):
         if rpeaks['ECG_R_Peaks'].size <= 3:
             print('Сигналы ЭКГ слишком шумные для анализа')
             # Отобразим эти шумные сигналы:
+            num_channels = len(channels)
+            fig, axs = plt.subplots(int(num_channels/2), 2, figsize=(11, 8), sharex=True, dpi=75)
+            for i, graph in enumerate(channels):
+                row = i // 2
+                col = i % 2
+                sig = np.array(df[graph])
+                axs[row, col].plot(time_new, sig)
+                axs[row, col].set_title(graph)
+                axs[row, col].set_xlim([0, 6])
+                axs[row, col].set_title(graph)
+                axs[row, col].set_xlabel('Time (seconds)')
+            plt.tight_layout()
+            plt.show()
+            plt.ioff()
+            plt.show()
             return 'too_noisy'
 
     # Поиск точек pqst:
@@ -550,6 +565,7 @@ def get_VECG(input_data: dict):
             else:
                 message_predict = f'Болен с вероятностью {probabilities.item() * 100:.2f}%'
             #print(message_predict)
+
         
         area_projections = None
         angle_qrst = None
