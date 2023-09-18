@@ -11,6 +11,55 @@ from functions import *
 @hydra.main(version_base=None, config_path="configs", config_name="app_config")
 def main(config: dict) -> None:
 
+    def enter_data():
+        # Главный обработчик кнопки запуск
+        if file_path is not None:
+            input_data = {}
+            input_data["data_edf"] = file_path
+            
+            try:
+                input_data["n_term_start"] = int(n_term_start.get())
+            except ValueError:
+                tkinter.messagebox.showerror("Ошибка", "Невозможно преобразовать номер периода ЭКГ в целое число")
+                return
+            
+            input_data["n_term_finish"] = None
+            input_data["filt"] = filt.get()
+
+            if not input_data["filt"]:
+                input_data["f_sreza"] = None
+            else:
+                try:
+                    input_data["f_sreza"] = float(f_sreza.get())
+                except ValueError:
+                    tkinter.messagebox.showerror("Ошибка", "Невозможно преобразовать частоту среза в число с плавающей точкой")
+                    return
+            
+            try:
+                input_data["f_sampling"] = float(f_sampling.get())
+            except ValueError:
+                tkinter.messagebox.showerror("Ошибка", "Невозможно преобразовать частоту дискретизации в число с плавающей точкой")
+                return
+            
+            input_data["show_ecg"] = show_ECG.get()
+            input_data["plot_3d"] = plot_3D.get()
+            input_data["qrs_loop_area"] = QRS_loop_area.get()
+            input_data["t_loop_area"] = T_loop_area.get()
+            input_data["count_qrst_angle"] = count_qrst_angle.get()
+            input_data["mean_filter"] = mean_filter.get()
+            input_data["predict"] = predict_res.get()
+            input_data["plot_projections"] = plot_projections.get()
+            res = get_VECG(input_data)
+
+        else:
+            tkinter.messagebox.showwarning("Ошибка", "Не выбран файл")
+
+
+    def close_all_plots():
+        # Закрытие всех графиков 
+        plt.close('all')
+
+
     def toggle_f_sreza_entry():
         # Позволяет убрать поле f_sreza если выключен фильтр
         if filt.get():
@@ -44,15 +93,13 @@ def main(config: dict) -> None:
     info_frame =tkinter.LabelFrame(frame, text="")
     info_frame.grid(row= 0, column=0, padx=10, pady=10)
 
-
     n_term_text = tkinter.Label(info_frame, text="Номер периода ЭКГ")
-    n_term_start = tkinter.Spinbox(info_frame, from_=config['n_term_start_begin'],
-                                  to=config['n_term_start_end'])
+    n_term_start = tkinter.Spinbox(info_frame, from_=config['n_term_begin'],
+                                  to=config['n_term_end'])
     n_term_start.delete(0, "end")  # Очищаем начальное значение
     n_term_start.insert(0, config['n_term_start'])  # Устанавливаем начальное значение
     n_term_text.grid(row=0, column=0, padx=45, pady=5)
     n_term_start.grid(row=1, column=0, padx=45, pady=5)
-
 
     open_button = tkinter.Button(info_frame, text="Открыть файл", command=open_file)
     open_button.grid(row=1, column=1, padx=45, pady=5)
@@ -108,6 +155,9 @@ def main(config: dict) -> None:
                                     variable=T_loop_area, onvalue=True, offvalue=False,)
     T_loop_area_check.pack(anchor="w", pady=2, padx=100)
 
+    close_button = tkinter.Button(type_frame, text="Закрыть все имеющиеся графики", command=close_all_plots)
+    close_button.pack(anchor="center", pady=5, padx=50)
+
 
     #####################
 
@@ -129,9 +179,9 @@ def main(config: dict) -> None:
 
     Fs_label = tkinter.Label(settings_frame, text="Частота дискретизации (в Гц)")
     Fs_label.grid(row=2, column=0, padx=22, pady=2)
-    Fs_new = tkinter.Entry(settings_frame)
-    Fs_new.grid(row=2, column=1, padx=22, pady=2)
-    Fs_new.insert(0, config['Fs_new'])  # Установление значения по умолчанию 
+    f_sampling = tkinter.Entry(settings_frame)
+    f_sampling.grid(row=2, column=1, padx=22, pady=2)
+    f_sampling.insert(0, config['f_sampling'])  # Установление значения по умолчанию 
 
 
     f_sreza_label = tkinter.Label(settings_frame, text="Частота среза ФВЧ фильтра (в Гц)")    
@@ -144,7 +194,8 @@ def main(config: dict) -> None:
 
     # Кнопка запуска
     custom_font = ("Helvetica", 10, "bold")
-    button = tkinter.Button(frame, text="Запуск", bg="#0074D9", fg="white", font=custom_font)
+    button = tkinter.Button(frame, text="Запуск", bg="#0074D9", fg="white",
+                            font=custom_font,  command=enter_data)
     button.grid(row=3, column=0, sticky="news", padx=30, pady=10)
     
     window.mainloop()
@@ -152,4 +203,5 @@ def main(config: dict) -> None:
 
 
 if __name__ == "__main__":
+    file_path = None
     main()

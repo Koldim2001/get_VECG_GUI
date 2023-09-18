@@ -424,7 +424,7 @@ def get_VECG(input_data: dict):
     # Отображение многоканального ЭКГ 
     if show_ECG:
         num_channels = len(channels)
-        fig, axs = plt.subplots(int(num_channels/2), 2, figsize=(11, 8), sharex=True)
+        fig, axs = plt.subplots(int(num_channels/2), 2, figsize=(11, 8), sharex=True, dpi=75)
 
         for i, graph in enumerate(channels):
             row = i // 2
@@ -461,7 +461,7 @@ def get_VECG(input_data: dict):
         
     # Построение проекций ВЭКГ:
     if  plot_projections:
-        plt.figure(figsize=(15, 5), dpi=90)
+        plt.figure(figsize=(15, 5), dpi=70)
         plt.subplot(1, 3, 1)
         plt.plot(df_term.x,df_term.y)
         plt.title('Фронтальная плоскость')

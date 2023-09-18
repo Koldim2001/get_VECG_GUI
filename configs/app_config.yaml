@@ -16,7 +16,7 @@ draw_segmentation: True
 n_term_start: 3 
 filt: True
 f_sreza: 0.7
-Fs_new: 2000
+f_sampling: 2000
 plot_3D: True
 plot_projections: True
 QRS_loop_area: False
@@ -30,5 +30,5 @@ show_ECG: True
 # --------------------------------------------- Диапазоны параметров -----------------------------------------------------
 
 # диапазон выбора периодов:
-n_term_start_begin: 2
-n_term_start_end: 9
+n_term_begin: 2
+n_term_end: 9
