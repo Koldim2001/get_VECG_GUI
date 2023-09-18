@@ -25,10 +25,12 @@ python main.py
 ```
 
 ---
-Примеры работы программы:
+## Примеры работы программы:
 <div style="text-align:center;">
   <img src="https://drive.google.com/uc?id=1A2xAH-OTgFBufN_oUqXMvpPzSiNpTtR-" alt="normal" width="900" height="570">
 </div>
+
+---
 
 <div style="text-align:center;">
   <img src="https://drive.google.com/uc?id=1-G1fckkzlWxolpYP62wo1z9NjZbn3sWh" alt="normal" width="900" height="400">
