@@ -120,7 +120,7 @@ def main(config: dict) -> None:
             file_name = os.path.basename(file_path)  # Получаем имя файла из полного пути
             file_label.config(text=f"Выбран файл: {file_name}")
         else:
-            file_label.config(text=f"Файл не выбран")
+            file_label.config(text="Файл не выбран")
         return file_path
 
     window = tkinter.Tk()
@@ -231,7 +231,7 @@ def main(config: dict) -> None:
 
     f_sreza_label = tkinter.Label(settings_frame, text="Частота среза ФВЧ фильтра (в Гц)")    
     f_sreza = tkinter.Entry(settings_frame)
-    f_sreza.insert(0, config['f_sreza'])  # Установление значения по умолчанию 
+    f_sreza.insert(0, config['f_sreza'])  # Установление значения по умолчанию
     toggle_f_sreza_entry()
     
 
@@ -243,7 +243,7 @@ def main(config: dict) -> None:
                             font=custom_font,  command=enter_data)
     button.grid(row=3, column=0, sticky="news", padx=30, pady=10)
    
-
+    # Инициализация поля результатов
     res_frame = tkinter.LabelFrame(frame, text="Результаты")
     res_frame.grid(row=4, column=0, sticky="news", padx=30, pady=5)
  

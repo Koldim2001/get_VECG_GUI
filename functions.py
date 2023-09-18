@@ -551,7 +551,7 @@ def get_VECG(input_data: dict):
 
             pointnet = PointNet().double()
             # Загрузка сохраненных весов модели
-            pointnet.load_state_dict(torch.load('models_for_inference/pointnet.pth'))
+            pointnet.load_state_dict(torch.load('models_for_inference/pointnet.pth', map_location=torch.device('cpu')))
             pointnet.eval().to('cpu')
             # инференс:
             with torch.no_grad():
