@@ -85,9 +85,13 @@ def main(config: dict) -> None:
 
                 # Вывод результатов:
                 for i, text in enumerate(message):
-                    label = tkinter.Label(res_frame, text=text)
+                    if 'Здоров' in text:
+                        label = tkinter.Label(res_frame, text=text, foreground='#126E18', font=('bold', 10))
+                    elif 'Болен' in text:
+                        label = tkinter.Label(res_frame, text=text, foreground='#8B0000', font=('bold', 10))
+                    else:
+                        label = tkinter.Label(res_frame, text=text)
                     label.grid(row=i, column=0, sticky="w")
-
 
         else:
             tkinter.messagebox.showwarning("Ошибка", "Не выбран файл")
