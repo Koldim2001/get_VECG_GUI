@@ -16,6 +16,9 @@ def main(config: dict) -> None:
         if file_path is not None:
             input_data = {}
             input_data["data_edf"] = file_path
+            if '.edf' not in file_path:
+                tkinter.messagebox.showerror("Ошибка", "Файл EDF не выбран")
+                return
             
             try:
                 input_data["n_term_start"] = int(n_term_start.get())
@@ -51,6 +54,34 @@ def main(config: dict) -> None:
             input_data["plot_projections"] = plot_projections.get()
             res = get_VECG(input_data)
 
+            message = []
+            if res == 'no_this_period':
+                print('WARNING')
+            if res == 'too_noisy':
+                print('WARNING')
+
+            if len(res) == 4:
+                area_projections, angle_qrst, angle_qrst_front, message_predict = res
+                if input_data["predict"]:
+                    message.append('СППР: ' + message_predict)
+                if input_data["qrs_loop_area"]:
+                    message.append(f'Площадь петли QRS во фронтальной плоскости: {"{:.3e}".format(area_projections[0])}')
+                    message.append(f'Площадь петли QRS во сагиттальной плоскости: {"{:.3e}".format(area_projections[1])}')
+                    message.append(f'Площадь петли QRS во аксиальной плоскости: {"{:.3e}".format(area_projections[2])}')
+                if len(area_projections) == 6:
+                    message.append(f'Площадь петли ST-T во фронтальной плоскости: {"{:.3e}".format(area_projections[3])}')
+                    message.append(f'Площадь петли ST-T во сагиттальной плоскости: {"{:.3e}".format(area_projections[4])}')
+                    message.append(f'Площадь петли ST-T во аксиальной плоскости: {"{:.3e}".format(area_projections[5])}')
+                elif input_data["t_loop_area"]:
+                    message.append(f'Площадь петли ST-T во фронтальной плоскости: {"{:.3e}".format(area_projections[0])}')
+                    message.append(f'Площадь петли ST-T во сагиттальной плоскости: {"{:.3e}".format(area_projections[1])}')
+                    message.append(f'Площадь петли ST-T во аксиальной плоскости: {"{:.3e}".format(area_projections[2])}')
+                if input_data["count_qrst_angle"]:
+                    message.append(f'Пространственный угол QRST равен {round(angle_qrst, 2)} градусов')
+                    message.append(f'Проекция угла QRST на фронтальную плоскость равна {round(angle_qrst_front, 2)} градусов')
+                for text in message:
+                    print(text)
+
         else:
             tkinter.messagebox.showwarning("Ошибка", "Не выбран файл")
 
@@ -77,6 +108,8 @@ def main(config: dict) -> None:
         if file_path:
             file_name = os.path.basename(file_path)  # Получаем имя файла из полного пути
             file_label.config(text=f"Выбран файл: {file_name}")
+        else:
+            file_label.config(text=f"Файл не выбран")
         return file_path
 
     window = tkinter.Tk()
@@ -88,6 +121,7 @@ def main(config: dict) -> None:
     frame = tkinter.Frame(window)
     frame.pack()
 
+    #############
 
     # Основное поле
     info_frame =tkinter.LabelFrame(frame, text="")
