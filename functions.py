@@ -90,7 +90,7 @@ def find_qrst_angle(mean_qrs, mean_t, name=''):
 
     # Конвертируем угол из радиан в градусы
     angle_degrees = np.degrees(angle_radians)
-    print(f"Угол QRST {name}равен {round(angle_degrees, 2)} градусов")
+    #print(f"Угол QRST {name}равен {round(angle_degrees, 2)} градусов")
 
     return angle_degrees
 
@@ -144,15 +144,15 @@ def loop(df_term, name, show=False):
     
     points = list(zip(df_term['x'], df_term['y']))
     area_inside_loop_1 = calculate_area(points)
-    print(f"Площадь петли {name_loop} во фронтальной плоскости:", area_inside_loop_1)
+    #print(f"Площадь петли {name_loop} во фронтальной плоскости:", area_inside_loop_1)
 
     points = list(zip(df_term['y'], df_term['z']))
     area_inside_loop_2 = calculate_area(points)
-    print(f"Площадь петли {name_loop} в сагиттальной плоскости:", area_inside_loop_2)
+    #print(f"Площадь петли {name_loop} в сагиттальной плоскости:", area_inside_loop_2)
 
     points = list(zip(df_term['x'], df_term['z']))
     area_inside_loop_3 = calculate_area(points)
-    print(f"Площадь петли {name_loop} в аксиальной плоскости:", area_inside_loop_3)
+    #print(f"Площадь петли {name_loop} в аксиальной плоскости:", area_inside_loop_3)
 
     return area_inside_loop_1, area_inside_loop_2, area_inside_loop_3
 
@@ -275,6 +275,7 @@ def apply_filter_mean(column, window_size):
 
 
 
+
 #------------------------------------------ГЛАВНЫЙ КОД--------------------------------------#
 
 def get_VECG(input_data: dict):
@@ -293,6 +294,7 @@ def get_VECG(input_data: dict):
     mean_filter = input_data["mean_filter"]
     predict_res = input_data["predict"]
     plot_projections = input_data["plot_projections"]
+    show_loops = False
 
     ## СЛЕДУЕТ УБРАТЬ ПРИ ТЕСТИРОВАНИИ:
     # Устанавливаем фильтр для игнорирования всех RuntimeWarning
@@ -392,7 +394,7 @@ def get_VECG(input_data: dict):
         if rpeaks['ECG_R_Peaks'].size <= 3:
             print('Сигналы ЭКГ слишком шумные для анализа')
             # Отобразим эти шумные сигналы:
-            return 'Too_noisy'
+            return 'too_noisy'
 
     # Поиск точек pqst:
     _, waves_peak = nk.ecg_delineate(signal, rpeaks, sampling_rate=Fs_new, method="peak")
@@ -401,16 +403,16 @@ def get_VECG(input_data: dict):
     # Выбор исследуемого периода/периодов
     i = n_term
     if type(i) == list:
-        print(f"Запрошен диапазон с {i[0]} по {i[1]} период включительно")
+        #print(f"Запрошен диапазон с {i[0]} по {i[1]} период включительно")
         fin = i[1]
         beg = i[0]
     else:
-        print(f"Запрошен {i} период")
+        #print(f"Запрошен {i} период")
         fin = i
         beg = i
 
     if beg-1 < 0 or fin >= len(rpeaks['ECG_R_Peaks']):
-        print('Запрашиваемого перода/диапазона периодов не существует')
+        #print('Запрашиваемого перода/диапазона периодов не существует')
         return 'no_this_period'
     
     start = rpeaks['ECG_R_Peaks'][beg-1]
@@ -428,12 +430,10 @@ def get_VECG(input_data: dict):
             row = i // 2
             col = i % 2
 
-            sig = np.array(df[graph])
-
-            axs[row, col].plot(time_new, sig)
-            #axs[row, col].plot(df_term[graph], df_term['time'], color='red')
+            axs[row, col].plot(np.array(df['time']), np.array(df[graph]))
+            axs[row, col].plot(np.array(df_term['time']), np.array(df_term[graph]), color='red')
             axs[row, col].set_title(graph)
-            axs[row, col].set_xlim([0, 6])
+            axs[row, col].set_xlim([1, 9])
             axs[row, col].set_title(graph)
             axs[row, col].set_xlabel('Time (seconds)')
 
@@ -510,6 +510,7 @@ def get_VECG(input_data: dict):
        
         # СППР:
         # Инференс модели pointnet:
+        message_predict = None
         if predict_res:
             point_cloud_array_innitial = df_term[['x', 'y', 'z']].values
             
@@ -545,14 +546,18 @@ def get_VECG(input_data: dict):
                 probabilities, predicted_class = torch.max(softmax_outputs, 1)
 
             if predicted_class == 0:
-                message = f'Здоров с вероятностью {probabilities.item() * 100:.2f}%'
+                message_predict = f'Здоров с вероятностью {probabilities.item() * 100:.2f}%'
             else:
-                message = f'Болен с вероятностью {probabilities.item() * 100:.2f}%'
-            print(message)
+                message_predict = f'Болен с вероятностью {probabilities.item() * 100:.2f}%'
+            #print(message_predict)
+        
+        area_projections = None
+        angle_qrst = None
+        angle_qrst_front = None
 
 
         # Поиск площадей при задании на исследование одного периодка ЭКГ:
-        area_projections , mean_qrs, mean_t = get_area(show=True, df=df,
+        area_projections , mean_qrs, mean_t = get_area(show=show_loops, df=df,
                                                        waves_peak=waves_peak, start=start,
                                                        Fs_new=Fs_new,  QRS=QRS_loop_area, 
                                                        T=T_loop_area)
@@ -566,6 +571,9 @@ def get_VECG(input_data: dict):
     # Выключаем интерактивный режим, чтобы окна графиков не закрывались сразу
     plt.ioff()
     plt.show()
+
+    
+    return area_projections, angle_qrst, angle_qrst_front, message_predict
 
 
 
