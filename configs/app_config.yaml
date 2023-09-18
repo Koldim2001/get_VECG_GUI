@@ -1,0 +1,33 @@
+# --------------------------------------------- HYDRA -----------------------------------------------------
+# раздел конфигурирования гидры (убирает дефолтно-встроенную систему логирования)
+defaults:  
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: custom
+
+hydra:
+  output_subdir: null
+  run:  
+    dir: .
+
+# --------------------------------------------- Предустановленные параметры -----------------------------------------------------
+
+draw_segmentation: True
+n_term_start: 3 
+filt: True
+f_sreza: 0.7
+Fs_new: 2000
+plot_3D: True
+plot_projections: True
+QRS_loop_area: False
+T_loop_area: False
+count_qrst_angle: False
+mean_filter: True
+predict_res: True
+show_ECG: True
+
+
+# --------------------------------------------- Диапазоны параметров -----------------------------------------------------
+
+n_term_start_begin: 2
+n_term_start_end: 9

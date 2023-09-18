@@ -1,0 +1,12 @@
+mne
+pandas
+matplotlib
+numpy
+scipy
+neurokit2
+plotly
+click
+shapely
+torch
+torchvision
+hydra-core
