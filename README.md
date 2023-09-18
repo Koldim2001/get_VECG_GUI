@@ -33,6 +33,6 @@ python main.py
 ---
 
 <div style="text-align:center;">
-  <img src="https://drive.google.com/uc?id=1-G1fckkzlWxolpYP62wo1z9NjZbn3sWh" alt="normal" width="900" height="400">
+  <img src="https://drive.google.com/uc?id=1-G1fckkzlWxolpYP62wo1z9NjZbn3sWh" alt="pathology" width="900" height="400">
 </div>
 
