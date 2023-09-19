@@ -39,6 +39,6 @@ python main.py
  
 ### HOW TO MAKE EXE:
 ```
-pip install pyinstaller
+pyinstaller --onefile -w --icon=logo.ico main.py
 pyinstaller --onefile -w main.py
 ```
