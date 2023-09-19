@@ -197,8 +197,8 @@ def main(config: dict) -> None:
                                     variable=T_loop_area, onvalue=True, offvalue=False,)
     T_loop_area_check.pack(anchor="w", pady=2, padx=100)
 
-    close_button = tkinter.Button(type_frame, text="Закрыть все имеющиеся графики", command=close_all_plots)
-    close_button.pack(anchor="center", pady=5, padx=50)
+    #close_button = tkinter.Button(type_frame, text="Закрыть все имеющиеся графики", command=close_all_plots)
+    #close_button.pack(anchor="center", pady=5, padx=50)
 
 
     #####################

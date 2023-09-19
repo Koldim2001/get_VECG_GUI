@@ -4,6 +4,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 import os
+
+from plotly.subplots import make_subplots
 from scipy import signal
 from matplotlib.pyplot import figure
 import scipy.signal
@@ -299,9 +301,6 @@ def get_VECG(input_data: dict):
     # Устанавливаем фильтр для игнорирования всех RuntimeWarning
     warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-    # Включаем режим, позволяющий открывать графики сразу все
-    plt.ion()
-
 
     if n_term_finish != None:
         if n_term_finish < n_term_start:
@@ -342,6 +341,7 @@ def get_VECG(input_data: dict):
             columns=channels)  # 1st row as the column names
 
     #raw_data = np.array(raw_data).T 
+
 
     # Переименование столбцов при необходимости:
     if 'ECG I-Ref' in df.columns:
@@ -411,23 +411,31 @@ def get_VECG(input_data: dict):
         # При повторной проблеме выход из функции:
         if rpeaks['ECG_R_Peaks'].size <= 3:
             print('Сигналы ЭКГ слишком шумные для анализа')
-            # Отобразим эти шумные сигналы:
+            
+            # Создаем подразделы для графиков
             num_channels = len(channels)
-            fig, axs = plt.subplots(int(num_channels/2), 2, figsize=(11, 8), sharex=True, dpi=75)
+            rows = int(num_channels / 2)
+            cols = 2
+            fig = make_subplots(rows=rows, cols=cols, shared_xaxes=True, subplot_titles=channels)
+
+            # Задаем общий интервал по оси X
+            x_range = [0, 6]
+
+            # Добавляем графики в subplot
             for i, graph in enumerate(channels):
-                row = i // 2
-                col = i % 2
-                sig = np.array(df[graph])
-                axs[row, col].plot(time_new, sig)
-                axs[row, col].set_title(graph)
-                axs[row, col].set_xlim([0, 6])
-                axs[row, col].set_title(graph)
-                axs[row, col].set_xlabel('Time (seconds)')
-            plt.tight_layout()
-            plt.show()
-            plt.ioff()
-            plt.show()
+                row = i // 2 + 1
+                col = i % 2 + 1
+                sig = df[graph]
+                trace = go.Scatter(x=time_new, y=sig, mode='lines', name=graph, showlegend=False)
+                fig.add_trace(trace, row=row, col=col)
+                fig.update_xaxes(title_text='Time (seconds)', row=row, col=col, range=x_range)
+
+            # Настроим макет и отобразим графики
+            fig.update_layout(title_text="Сигналы ЭКГ")
+            fig.show()
+
             return 'too_noisy'
+
 
     # Поиск точек pqst:
     _, waves_peak = nk.ecg_delineate(signal, rpeaks, sampling_rate=Fs_new, method="peak")
@@ -452,31 +460,40 @@ def get_VECG(input_data: dict):
     end = rpeaks['ECG_R_Peaks'][fin]
     df_term = df.iloc[start:end,:]
     df_row = df.iloc[start:start+1,:]
+    
 
 
     # Отображение многоканального ЭКГ 
     if show_ECG:
+        # Создаем подразделы для графиков
         num_channels = len(channels)
-        fig, axs = plt.subplots(int(num_channels/2), 2, figsize=(11, 8), sharex=True, dpi=75)
+        rows = num_channels
+        cols = 1
+        fig = make_subplots(rows=rows, cols=cols, shared_xaxes=True, subplot_titles=channels)
 
+        # Задаем общий интервал по оси X
+        x_range = [0.5, 9.5]
+
+        fig_height = num_channels * 140
+
+        # Добавляем графики в subplot
         for i, graph in enumerate(channels):
-            row = i // 2
-            col = i % 2
+            row = i + 1
 
-            axs[row, col].plot(np.array(df['time']), np.array(df[graph]))
-            axs[row, col].plot(np.array(df_term['time']), np.array(df_term[graph]), color='red')
-            axs[row, col].set_title(graph)
-            axs[row, col].set_xlim([1, 9])
-            axs[row, col].set_title(graph)
-            axs[row, col].set_xlabel('Time (seconds)')
+            trace1 = go.Scatter(x=df['time'], y=df[graph], mode='lines', name=graph, line=dict(color='blue'), showlegend=False)
+            trace2 = go.Scatter(x=df_term['time'], y=df_term[graph], mode='lines', name='Term_' + graph, line=dict(color='red'), showlegend=False)
 
-        plt.tight_layout()
-        plt.show()
+            fig.add_trace(trace1, row=row, col=1)
+            fig.add_trace(trace2, row=row, col=1)
+            fig.update_xaxes(row=row, col=1, range=x_range)
 
-    df_term = pd.concat([df_term, df_row])
+        # Настроим макет и отобразим графики
+        fig.update_layout(title_text="Графики ЭКГ отведений", height=fig_height)
+        fig.show()
 
 
     # Расчет ВЭКГ
+    df_term = pd.concat([df_term, df_row])
     df_term = make_vecg(df_term)
     df = make_vecg(df)
     df_term['size'] = 100 # задание размера для 3D визуализации
@@ -493,31 +510,36 @@ def get_VECG(input_data: dict):
         df_term['size'] = 100 
         
     # Построение проекций ВЭКГ:
-    if  plot_projections:
-        plt.figure(figsize=(15, 5), dpi=70)
-        plt.subplot(1, 3, 1)
-        plt.plot(df_term.x,df_term.y)
-        plt.title('Фронтальная плоскость')
-        plt.xlabel('X')
-        plt.ylabel('Y')
+    if plot_projections:
+        # Создаем подразделы для графиков
+        fig = make_subplots(rows=1, cols=3, subplot_titles=['Фронтальная плоскость', 'Сагиттальная плоскость', 'Аксиальная плоскость'])
 
-        plt.subplot(1, 3, 2)
-        plt.plot(df_term.y,df_term.z)
-        plt.title('Сагиттальная плоскость')
-        plt.xlabel('Y')
-        plt.ylabel('Z')
+        # График фронтальной плоскости
+        trace1 = go.Scatter(x=df_term['x'], y=df_term['y'], mode='lines', showlegend=False)
+        fig.add_trace(trace1, row=1, col=1)
+        fig.update_xaxes(title_text='X', row=1, col=1)
+        fig.update_yaxes(title_text='Y', row=1, col=1)
 
-        plt.subplot(1, 3, 3)
-        plt.plot(df_term.x, df_term.z)
-        plt.title('Аксиальная плоскость')  
-        plt.xlabel('X')
-        plt.ylabel('Z')
-        plt.show()
+        # График сагиттальной плоскости
+        trace2 = go.Scatter(x=df_term['y'], y=df_term['z'], mode='lines', showlegend=False)
+        fig.add_trace(trace2, row=1, col=2)
+        fig.update_xaxes(title_text='Y', row=1, col=2)
+        fig.update_yaxes(title_text='Z', row=1, col=2)
+
+        # График аксиальной плоскости
+        trace3 = go.Scatter(x=df_term['x'], y=df_term['z'], mode='lines', showlegend=False)
+        fig.add_trace(trace3, row=1, col=3)
+        fig.update_xaxes(title_text='X', row=1, col=3)
+        fig.update_yaxes(title_text='Z', row=1, col=3)
+
+        # Настроим макет и отобразим графики
+        fig.update_layout(height=510, width=1300, title_text="Проекции ВЭКГ на главные плоскости")
+        fig.show()
 
     # Интерактивное 3D отображение
     if plot_3D:
         fig = px.scatter_3d(df_term, x='x', y='y', z='z', size='size', size_max=10, opacity=1)
-        fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+        fig.update_layout(title_text="3D представление ВЭКГ")
         fig.show()
 
     # Работа при указании одного периода ЭКГ: 
@@ -600,11 +622,7 @@ def get_VECG(input_data: dict):
             angle_qrst = find_qrst_angle(mean_qrs, mean_t)
             angle_qrst_front = find_qrst_angle(mean_qrs[:2], mean_t[:2],
                                                name='во фронтальной плоскости ')
-
-           
-    # Выключаем интерактивный режим, чтобы окна графиков не закрывались сразу
-    plt.ioff()
-    plt.show()
+    
 
     return area_projections, angle_qrst, angle_qrst_front, message_predict
 

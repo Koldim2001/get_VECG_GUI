@@ -8,4 +8,3 @@ plotly
 shapely
 torch
 torchvision
-hydra-core
