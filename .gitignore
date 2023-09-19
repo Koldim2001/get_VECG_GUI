@@ -7,3 +7,6 @@
 /ecg_database
 /utils/analysis.ipynb
 /Data_VECG
+main.spec
+/build
+main.exe

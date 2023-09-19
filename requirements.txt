@@ -1,4 +1,4 @@
-mne
+pyEDFlib
 pandas
 matplotlib
 numpy

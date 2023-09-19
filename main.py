@@ -3,14 +3,11 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 import os
-import hydra
 from functions import *
 
 
 
-@hydra.main(version_base=None, config_path="configs", config_name="app_config")
 def main(config: dict) -> None:
-
     def enter_data():
         # Главный обработчик кнопки запуск
         if file_path is not None:
@@ -252,4 +249,21 @@ def main(config: dict) -> None:
 
 if __name__ == "__main__":
     file_path = None
-    main()
+    
+    config = {'draw_segmentation': True,
+    'n_term_start': 3 ,
+    'filt': True,
+    'f_sreza': 0.7,
+    'f_sampling': 2000,
+    'plot_3D': True,
+    'plot_projections': True,
+    'QRS_loop_area': False,
+    'T_loop_area': False,
+    'count_qrst_angle': False,
+    'mean_filter': True,
+    'predict_res': True,
+    'show_ECG': False,
+    'n_term_begin': 2,
+    'n_term_end': 9,
+    'logo': 'configs/bmt_logo_black.png'}
+    main(config)

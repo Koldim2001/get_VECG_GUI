@@ -1,4 +1,4 @@
-import mne
+import pyedflib
 import math
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -316,14 +316,33 @@ def get_VECG(input_data: dict):
         data_edf = convert_to_posix_path(data_edf)
 
     # Считывание edf данных:
-    data = mne.io.read_raw_edf(data_edf, verbose=0)
-    raw_data = data.get_data()
-    info = data.info
-    channels = data.ch_names
-    fd = info['sfreq'] # Частота дискретизации
+    # Открываем EDF файл
+    f = pyedflib.EdfReader(data_edf)
+
+    # Получаем информацию о каналах
+    num_channels = f.signals_in_file
+    channels = f.getSignalLabels()
+
+    # Читаем данные по каналам
+    raw_data = []
+    for i in range(num_channels):
+        channel_data = f.readSignal(i)
+        raw_data.append(channel_data)
+
+    fd = f.getSampleFrequency(0)
+
+    # Закрываем файл EDF после чтения
+    f.close()
+
+    raw_data = np.array(raw_data)
+
+    # Создаем DataFrame
     df = pd.DataFrame(data=raw_data.T,    # values
-                index=range(raw_data.shape[1]),  # 1st column as index
-                columns=channels)  # 1st row as the column names
+            index=range(raw_data.shape[1]),  # 1st column as index
+            columns=channels)  # 1st row as the column names
+
+    #raw_data = np.array(raw_data).T 
+
     # Переименование столбцов при необходимости:
     if 'ECG I-Ref' in df.columns:
         df = rename_columns(df)
