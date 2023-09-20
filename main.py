@@ -265,5 +265,5 @@ if __name__ == "__main__":
     'show_ECG': False,
     'n_term_begin': 2,
     'n_term_end': 9,
-    'logo': 'configs/bmt_logo_black.png'}
+    'logo': 'configs/logo.png'}
     main(config)
