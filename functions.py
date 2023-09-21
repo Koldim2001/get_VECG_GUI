@@ -357,10 +357,12 @@ def get_VECG(input_data: dict):
     logs = input_data["logs"]
     show_loops = False
     show_angle = False
+    show_detect_pqrst = False
      
     if logs:
         show_loops = True
         show_angle = True
+        show_detect_pqrst = True
 
 
     # Устанавливаем фильтр для игнорирования всех RuntimeWarning
@@ -503,6 +505,37 @@ def get_VECG(input_data: dict):
 
     # Поиск точек pqst:
     _, waves_peak = nk.ecg_delineate(signal, rpeaks, sampling_rate=Fs_new, method="peak")
+
+    # Отображение PQST точек на сигнале первого отведения (или второго при ошибке на первом)
+    if show_detect_pqrst:
+        # Создаем график сигнала
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=time_new, y=signal, mode='lines', name='Signal', line=dict(color='black')))
+
+        # Отображаем вертикальные линии для каждой точки
+        colors = {'ECG_P_Peaks': 'red', 'ECG_Q_Peaks': 'green', 'ECG_S_Peaks': 'magenta', 'ECG_T_Peaks': 'blue'}
+        for wave_type, peaks in waves_peak.items():
+            if wave_type in ['ECG_P_Peaks', 'ECG_Q_Peaks', 'ECG_S_Peaks', 'ECG_T_Peaks']:
+                wave_type_label = wave_type.split('_')[1]  # Извлекаем часть имени для метки графика
+                for peak in peaks:
+                    if not np.isnan(peak):  # Проверяем, что значение точки не является NaN
+                        fig.add_shape(go.layout.Shape(
+                            type='line',
+                            x0=time_new[int(peak)],
+                            x1=time_new[int(peak)],
+                            y0=min(signal),
+                            y1=max(signal),
+                            line=dict(color=colors[wave_type], dash='dot'),
+                            name=f'{wave_type_label} Peak'
+                        ))
+
+        # Настройка макета и отображение графика
+        fig.update_layout(
+            xaxis=dict(range=[1, 5], title='Time (seconds)'),
+            yaxis=dict(title='Signal ECG I'),
+            title=f'Детекция PQRST на {n_otvedenie} отведении'
+        )
+        fig.show()
 
 
     # Выбор исследуемого периода/периодов
