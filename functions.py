@@ -313,7 +313,7 @@ def angle_3d_plot(df1, df2, df3):
             name='ВЭКГ'
         )
     )
-    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), title_text="Угол QRS в пространстве")
+    fig.update_layout(title_text="Угол QRST")
     fig.show()
 
 
@@ -531,7 +531,7 @@ def get_VECG(input_data: dict):
 
         # Настройка макета и отображение графика
         fig.update_layout(
-            xaxis=dict(range=[1, 5], title='Time (seconds)'),
+            xaxis=dict(range=[2, 5], title='Time (seconds)'),
             yaxis=dict(title='Signal ECG I'),
             title=f'Детекция PQRST на {n_otvedenie} отведении'
         )
