@@ -1,10 +1,10 @@
-import pyedflib
-import math
-import pandas as pd
-from matplotlib import pyplot as plt
-import numpy as np
 import os
+import math
+import warnings
 
+import pyedflib
+import pandas as pd
+import numpy as np
 from plotly.subplots import make_subplots
 import plotly.subplots as sp
 from scipy import signal
@@ -17,7 +17,6 @@ import plotly.graph_objects as go
 import torch
 from torchvision import transforms
 from models_for_inference.model import *
-import warnings
 
 
 
