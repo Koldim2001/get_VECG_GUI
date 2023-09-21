@@ -354,8 +354,13 @@ def get_VECG(input_data: dict):
     mean_filter = input_data["mean_filter"]
     predict_res = input_data["predict"]
     plot_projections = input_data["plot_projections"]
+    logs = input_data["logs"]
     show_loops = False
     show_angle = False
+     
+    if logs:
+        show_loops = True
+        show_angle = True
 
 
     # Устанавливаем фильтр для игнорирования всех RuntimeWarning
@@ -719,4 +724,5 @@ if __name__ == "__main__":
     input_data["mean_filter"] = True
     input_data["predict"] = True
     input_data["plot_projections"] = True
+    input_data["logs"] = True
     get_VECG(input_data)
