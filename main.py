@@ -3,24 +3,30 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 import os
+import json
 from functions import *
 
 
 
 def main(config: dict) -> None:
+    
     def enter_data():
         # Главный обработчик кнопки запуск
         if file_path is not None:
             input_data = {}
+
+            # Получим путь к файлу edf:
             input_data["data_edf"] = file_path
             if '.edf' not in file_path:
                 tkinter.messagebox.showerror("Ошибка", "Файл EDF не выбран")
                 return
             
+            # Возьмем состояния из всех виджетов и запишем в словарь + проверим исключения:
             try:
                 input_data["n_term_start"] = int(n_term_start.get())
             except ValueError:
-                tkinter.messagebox.showerror("Ошибка", "Невозможно преобразовать номер периода ЭКГ в целое число")
+                tkinter.messagebox.showerror("Ошибка",
+                                             "Невозможно преобразовать номер периода ЭКГ в целое число")
                 return
             
             input_data["n_term_finish"] = None
@@ -32,13 +38,15 @@ def main(config: dict) -> None:
                 try:
                     input_data["f_sreza"] = float(f_sreza.get())
                 except ValueError:
-                    tkinter.messagebox.showerror("Ошибка", "Невозможно преобразовать частоту среза в число с плавающей точкой")
+                    tkinter.messagebox.showerror("Ошибка",
+                                                 "Невозможно преобразовать частоту среза в число с плавающей точкой")
                     return
             
             try:
                 input_data["f_sampling"] = float(f_sampling.get())
             except ValueError:
-                tkinter.messagebox.showerror("Ошибка", "Невозможно преобразовать частоту дискретизации в число с плавающей точкой")
+                tkinter.messagebox.showerror("Ошибка",
+                                             "Невозможно преобразовать частоту дискретизации в число с плавающей точкой")
                 return
             
             input_data["show_ecg"] = show_ECG.get()
@@ -49,8 +57,11 @@ def main(config: dict) -> None:
             input_data["mean_filter"] = mean_filter.get()
             input_data["predict"] = predict_res.get()
             input_data["plot_projections"] = plot_projections.get()
+
+            # Запустим главную функцию получения ВЭКГ и СППР
             res = get_VECG(input_data)
 
+            # Обработаем результаты программы, поместив в список предложения:
             message = []
             if res == 'no_this_period':
                 tkinter.messagebox.showerror("Ошибка", "Не найден такой период. Попробуйте ввести меньше значение")
@@ -76,11 +87,11 @@ def main(config: dict) -> None:
                     message.append(f'Пространственный угол QRST равен {round(angle_qrst, 2)} градусов')
                     #message.append(f'Проекция угла QRST на фронтальную плоскость равна {round(angle_qrst_front, 2)} градусов')
 
-
+                # Очистим поле результатов перед новой записью
                 for widget in res_frame.winfo_children():
                     widget.destroy()
 
-                # Вывод результатов:
+                # Вывод результатов в поле результатов:
                 for i, text in enumerate(message):
                     if 'Здоров' in text:
                         label = tkinter.Label(res_frame, text=text, foreground='#126E18', font=('bold', 10))
@@ -92,11 +103,6 @@ def main(config: dict) -> None:
 
         else:
             tkinter.messagebox.showwarning("Ошибка", "Не выбран файл")
-
-
-    def close_all_plots():
-        # Закрытие всех графиков 
-        plt.close('all')
 
 
     def toggle_f_sreza_entry():
@@ -120,6 +126,8 @@ def main(config: dict) -> None:
             file_label.config(text="Файл не выбран")
         return file_path
 
+
+    # Создание window и подгрузка лого:
     window = tkinter.Tk()
     window.title("Получение ВЭКГ")
     icon = tkinter.PhotoImage(file=config['logo'])
@@ -128,6 +136,7 @@ def main(config: dict) -> None:
     # Создание главного окна приложения
     frame = tkinter.Frame(window)
     frame.pack()
+    
 
     #############
 
@@ -143,6 +152,7 @@ def main(config: dict) -> None:
     n_term_text.grid(row=0, column=0, padx=45, pady=5)
     n_term_start.grid(row=1, column=0, padx=45, pady=5)
 
+    # Кнопка загрузки файла
     open_button = tkinter.Button(info_frame, text="Открыть файл", command=open_file)
     open_button.grid(row=1, column=1, padx=45, pady=5)
 
@@ -197,9 +207,6 @@ def main(config: dict) -> None:
                                     variable=T_loop_area, onvalue=True, offvalue=False,)
     T_loop_area_check.pack(anchor="w", pady=2, padx=100)
 
-    #close_button = tkinter.Button(type_frame, text="Закрыть все имеющиеся графики", command=close_all_plots)
-    #close_button.pack(anchor="center", pady=5, padx=50)
-
 
     #####################
 
@@ -249,21 +256,7 @@ def main(config: dict) -> None:
 
 if __name__ == "__main__":
     file_path = None
-    
-    config = {'draw_segmentation': True,
-    'n_term_start': 3 ,
-    'filt': True,
-    'f_sreza': 0.7,
-    'f_sampling': 2000,
-    'plot_3D': True,
-    'plot_projections': True,
-    'QRS_loop_area': False,
-    'T_loop_area': False,
-    'count_qrst_angle': False,
-    'mean_filter': True,
-    'predict_res': True,
-    'show_ECG': False,
-    'n_term_begin': 2,
-    'n_term_end': 9,
-    'logo': 'configs/logo.png'}
+    # Загрузка конфигурации программы:
+    with open('configs/config.json', 'r') as json_file:
+        config = json.load(json_file)
     main(config)
