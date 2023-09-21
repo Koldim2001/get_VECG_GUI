@@ -1,4 +1,4 @@
-mne
+pyEDFlib
 pandas
 matplotlib
 numpy
@@ -8,4 +8,3 @@ plotly
 shapely
 torch
 torchvision
-hydra-core

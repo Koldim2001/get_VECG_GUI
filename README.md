@@ -36,3 +36,9 @@ python main.py
   <img src="https://drive.google.com/uc?id=1-G1fckkzlWxolpYP62wo1z9NjZbn3sWh" alt="pathology" width="900" height="400">
 </div>
 
+ 
+### HOW TO MAKE EXE:
+```
+pip install pyinstaller
+pyinstaller --onefile -w --icon=configs/logo.ico main.py
+```

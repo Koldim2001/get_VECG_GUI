@@ -1,9 +1,12 @@
-import mne
-import math
-import pandas as pd
-from matplotlib import pyplot as plt
-import numpy as np
 import os
+import math
+import warnings
+
+import pyedflib
+import pandas as pd
+import numpy as np
+from plotly.subplots import make_subplots
+import plotly.subplots as sp
 from scipy import signal
 from matplotlib.pyplot import figure
 import scipy.signal
@@ -14,7 +17,57 @@ import plotly.graph_objects as go
 import torch
 from torchvision import transforms
 from models_for_inference.model import *
-import warnings
+
+
+
+def visualize_rotate(data):
+    # Функция по визуализации вращения по нажатию кнопки
+    x_eye, y_eye, z_eye = 1.25, 1.25, 0.8
+    frames=[]
+
+    def rotate_z(x, y, z, theta):
+        w = x+1j*y
+        return np.real(np.exp(1j*theta)*w), np.imag(np.exp(1j*theta)*w), z
+
+    for t in np.arange(0, 10.26, 0.025):
+        xe, ye, ze = rotate_z(x_eye, y_eye, z_eye, -t)
+        frames.append(dict(layout=dict(scene=dict(camera=dict(eye=dict(x=xe, 
+                                                                       y=ye,
+                                                                       z=ze))))))
+    fig = go.Figure(data=data,
+        layout=go.Layout(
+            updatemenus=[dict(type='buttons',
+                showactive=False,
+                y=1,
+                x=0.8,
+                xanchor='left',
+                yanchor='bottom',
+                pad=dict(t=45, r=10),
+                buttons=[dict(label='Запуск вращения',
+                    method='animate',
+                    args=[None, dict(frame=dict(duration=20, redraw=True),
+                        transition=dict(duration=0),
+                        fromcurrent=True,
+                        mode='immediate'
+                        )]
+                    )
+                ])]
+        ),
+        frames=frames
+    )
+
+    return fig
+
+
+def show_3d(x, y, z):
+    # Отображение 3D интерактивного окна
+    data=[go.Scatter3d(x=x, y=y, z=z,
+                       mode='lines+markers', opacity=1)]
+    fig = visualize_rotate(data)
+    fig.update_traces(marker=dict(size=3),
+                      line=dict(width=5))
+    fig.update_layout(title_text="3D представление ВЭКГ")
+    fig.show()
 
 
 def convert_to_posix_path(windows_path):
@@ -33,6 +86,9 @@ def rename_columns(df):
 
 
 def discrete_signal_resample_for_DL(signal, old_sampling_rate, new_sampling_rate):
+    """
+    Осуществление ресемплирования перед DL инференсом
+    """
     # Вычисляем коэффициент, определяющий отношение новой частоты к старой
     resample_factor = new_sampling_rate / old_sampling_rate
 
@@ -46,7 +102,9 @@ def discrete_signal_resample_for_DL(signal, old_sampling_rate, new_sampling_rate
 
 
 def discrete_signal_resample(signal, time, new_sampling_rate):
-    ## Производит ресемплирование
+    """
+    Осуществление ресемплирования
+    """
     # Текущая частота дискретизации
     current_sampling_rate = 1 / np.mean(np.diff(time))
 
@@ -76,7 +134,9 @@ def find_mean(df_term):
 
 
 def find_qrst_angle(mean_qrs, mean_t, name=''):
-    ## Находит угол QRST с помощью скалярного произведения
+    """
+    Осуществление ресемплирования перед DL инференсом
+    """
     # Преобразуем списки в numpy массивы
     mean_qrs = np.array(mean_qrs)
     mean_t = np.array(mean_t)
@@ -119,27 +179,30 @@ def loop(df_term, name, show=False):
         name_loop = name
 
     if show:
-        plt.figure(figsize=(15, 5), dpi=80)
-        plt.subplot(1, 3, 1)
-        plt.plot(df_term.x,df_term.y)
-        plt.title('Фронтальная плоскость')
-        plt.xlabel('X')
-        plt.ylabel('Y')
+        # Создаем подокно с тремя графиками в ряд
+        fig = sp.make_subplots(rows=1, cols=3, subplot_titles=('Фронтальная плоскость', 
+                                                                'Сагиттальная плоскость',
+                                                                'Аксиальная плоскость'))
 
-        plt.subplot(1, 3, 2)
-        plt.plot(df_term.y,df_term.z)
-        plt.title('Сагиттальная плоскость')
-        plt.xlabel('Y')
-        plt.ylabel('Z')
+        # Создаем трехмерные графики для каждой плоскости
+        trace1 = go.Scatter(x=df_term['x'], y=df_term['y'], mode='lines',
+                            name='Фронтальная плоскость', showlegend=False)
+        trace2 = go.Scatter(x=df_term['y'], y=df_term['z'], mode='lines',
+                            name='Сагиттальная плоскость', showlegend=False)
+        trace3 = go.Scatter(x=df_term['x'], y=df_term['z'], mode='lines',
+                            name='Аксиальная плоскость', showlegend=False)
 
-        plt.subplot(1, 3, 3)
-        plt.plot(df_term.x, df_term.z)
-        plt.title('Аксиальная плоскость')  
-        plt.xlabel('X')
-        plt.ylabel('Z')
+        # Добавляем графики в подокно
+        fig.add_trace(trace1, row=1, col=1)
+        fig.add_trace(trace2, row=1, col=2)
+        fig.add_trace(trace3, row=1, col=3)
 
-        plt.suptitle(f'{name_loop} петля', fontsize=16)
-        plt.show()
+        # Установка общего заголовка
+        title = f'{name_loop} петля'
+        fig.update_layout(title_text=title, title_font_size=16, height=510, width=1300,)
+
+        # Отображение графика
+        fig.show()
     
     points = list(zip(df_term['x'], df_term['y']))
     area_inside_loop_1 = calculate_area(points)
@@ -174,7 +237,6 @@ def get_area(show, df, waves_peak, start, Fs_new, QRS, T):
     df_term = df_new.iloc[closest_Q_peak:closest_S_peak,:]
     df_row = df_new.iloc[closest_Q_peak:closest_Q_peak+1,:]
     df_term = pd.concat([df_term, df_row])
-    #df_term = make_vecg(df_term)
     mean_qrs = find_mean(df_term)
     if QRS:
         area = list(loop(df_term, name='QRS', show=show))
@@ -188,7 +250,6 @@ def get_area(show, df, waves_peak, start, Fs_new, QRS, T):
     df_term = df_new.iloc[closest_S_peak + int(0.025*Fs_new) : closest_T_end, :]
     df_row = df_new.iloc[closest_S_peak+int(0.025*Fs_new):closest_S_peak+int(0.025*Fs_new)+1,:]
     df_term = pd.concat([df_term, df_row])
-    #df_term = make_vecg(df_term)
     mean_t = find_mean(df_term)
     if T:
         area.extend(list(loop(df_term, name='T', show=show)))
@@ -252,7 +313,7 @@ def angle_3d_plot(df1, df2, df3):
             name='ВЭКГ'
         )
     )
-    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), title_text="Угол QRS в пространстве")
     fig.show()
 
 
@@ -294,15 +355,13 @@ def get_VECG(input_data: dict):
     predict_res = input_data["predict"]
     plot_projections = input_data["plot_projections"]
     show_loops = False
+    show_angle = False
 
-    ## СЛЕДУЕТ УБРАТЬ ПРИ ТЕСТИРОВАНИИ:
+
     # Устанавливаем фильтр для игнорирования всех RuntimeWarning
     warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-    # Включаем режим, позволяющий открывать графики сразу все
-    plt.ion()
-
-
+    # Отработка ошибок введения номеров периодов ЭКГ
     if n_term_finish != None:
         if n_term_finish < n_term_start:
             raise ValueError("Ошибка: n_term_finish должно быть >= n_term_start")
@@ -311,19 +370,37 @@ def get_VECG(input_data: dict):
     else:
         n_term = n_term_start
 
+    # Приведение путей к posix формату
     if '\\' in data_edf:
-        # Преобразуем путь в формат Posix
         data_edf = convert_to_posix_path(data_edf)
 
     # Считывание edf данных:
-    data = mne.io.read_raw_edf(data_edf, verbose=0)
-    raw_data = data.get_data()
-    info = data.info
-    channels = data.ch_names
-    fd = info['sfreq'] # Частота дискретизации
-    df = pd.DataFrame(data=raw_data.T,    # values
-                index=range(raw_data.shape[1]),  # 1st column as index
-                columns=channels)  # 1st row as the column names
+    # Открываем EDF файл
+    f = pyedflib.EdfReader(data_edf)
+
+    # Получаем информацию о каналах
+    num_channels = f.signals_in_file
+    channels = f.getSignalLabels()
+
+    # Читаем данные по каналам
+    raw_data = []
+    for i in range(num_channels):
+        channel_data = f.readSignal(i)
+        raw_data.append(channel_data)
+
+    # Получаем частоту дискретизации
+    fd = f.getSampleFrequency(0)
+
+    # Закрываем файл EDF после чтения
+    f.close()
+
+    raw_data = np.array(raw_data)
+
+    # Создаем DataFrame
+    df = pd.DataFrame(data=raw_data.T,   
+            index=range(raw_data.shape[1]), 
+            columns=channels)  
+
     # Переименование столбцов при необходимости:
     if 'ECG I-Ref' in df.columns:
         df = rename_columns(df)
@@ -361,7 +438,7 @@ def get_VECG(input_data: dict):
         df_new = pd.DataFrame()
         for graph in channels:
             sig = np.array(df[graph])
-            sos = scipy.signal.butter(1, 100, 'lp', fs=Fs_new, output='sos')
+            sos = scipy.signal.butter(1, 150, 'lp', fs=Fs_new, output='sos')
             avg = np.mean(sig)
             filtered = scipy.signal.sosfilt(sos, sig)
             filtered += avg
@@ -392,23 +469,32 @@ def get_VECG(input_data: dict):
         # При повторной проблеме выход из функции:
         if rpeaks['ECG_R_Peaks'].size <= 3:
             print('Сигналы ЭКГ слишком шумные для анализа')
-            # Отобразим эти шумные сигналы:
+            
+            # Создаем подразделы для графиков
             num_channels = len(channels)
-            fig, axs = plt.subplots(int(num_channels/2), 2, figsize=(11, 8), sharex=True, dpi=75)
+            rows = int(num_channels / 2)
+            cols = 2
+            fig = make_subplots(rows=rows, cols=cols, shared_xaxes=True, subplot_titles=channels)
+
+            # Задаем общий интервал по оси X
+            x_range = [1, 7]
+
+            # Добавляем графики в subplot
             for i, graph in enumerate(channels):
-                row = i // 2
-                col = i % 2
-                sig = np.array(df[graph])
-                axs[row, col].plot(time_new, sig)
-                axs[row, col].set_title(graph)
-                axs[row, col].set_xlim([0, 6])
-                axs[row, col].set_title(graph)
-                axs[row, col].set_xlabel('Time (seconds)')
-            plt.tight_layout()
-            plt.show()
-            plt.ioff()
-            plt.show()
+                row = i // 2 + 1
+                col = i % 2 + 1
+                sig = df[graph]
+                trace = go.Scatter(x=time_new, y=sig, mode='lines', name=graph,
+                                   showlegend=False, line=dict(color='blue'))
+                fig.add_trace(trace, row=row, col=col)
+                fig.update_xaxes(row=row, col=col, range=x_range)
+
+            # Настроим макет и отобразим графики
+            fig.update_layout(title_text="Сигналы ЭКГ, которые не получилось обработать")
+            fig.show()
+
             return 'too_noisy'
+
 
     # Поиск точек pqst:
     _, waves_peak = nk.ecg_delineate(signal, rpeaks, sampling_rate=Fs_new, method="peak")
@@ -433,35 +519,48 @@ def get_VECG(input_data: dict):
     end = rpeaks['ECG_R_Peaks'][fin]
     df_term = df.iloc[start:end,:]
     df_row = df.iloc[start:start+1,:]
+    
 
 
     # Отображение многоканального ЭКГ 
     if show_ECG:
+        # Создаем подразделы для графиков
         num_channels = len(channels)
-        fig, axs = plt.subplots(int(num_channels/2), 2, figsize=(11, 8), sharex=True, dpi=75)
+        rows = num_channels
+        cols = 1
+        fig = make_subplots(rows=rows, cols=cols, shared_xaxes=True, subplot_titles=channels)
 
+        # Задаем общий интервал по оси X
+        x_range = [0.5, 9.5]
+
+        fig_height = num_channels * 140
+
+        # Добавляем графики в subplot
         for i, graph in enumerate(channels):
-            row = i // 2
-            col = i % 2
+            row = i + 1
 
-            axs[row, col].plot(np.array(df['time']), np.array(df[graph]))
-            axs[row, col].plot(np.array(df_term['time']), np.array(df_term[graph]), color='red')
-            axs[row, col].set_title(graph)
-            axs[row, col].set_xlim([1, 9])
-            axs[row, col].set_title(graph)
-            axs[row, col].set_xlabel('Time (seconds)')
+            trace1 = go.Scatter(x=df['time'], y=df[graph], mode='lines', name=graph,
+                                line=dict(color='blue'), showlegend=False)
+            trace2 = go.Scatter(x=df_term['time'], y=df_term[graph],
+                                mode='lines', name='Term_' + graph,
+                                line=dict(color='red'), showlegend=False)
 
-        plt.tight_layout()
-        plt.show()
+            fig.add_trace(trace1, row=row, col=1)
+            fig.add_trace(trace2, row=row, col=1)
+            fig.update_xaxes(row=row, col=1, range=x_range)
 
-    df_term = pd.concat([df_term, df_row])
+        # Настроим макет и отобразим графики
+        fig.update_layout(title_text="Графики ЭКГ отведений", height=fig_height)
+        fig.show()
 
 
     # Расчет ВЭКГ
+    df_term = pd.concat([df_term, df_row])
     df_term = make_vecg(df_term)
     df = make_vecg(df)
     df_term['size'] = 100 # задание размера для 3D визуализации
 
+    # Сглаживание петель
     if mean_filter:
         df = make_vecg(df)
         window = int(Fs_new * 0.02)
@@ -474,32 +573,39 @@ def get_VECG(input_data: dict):
         df_term['size'] = 100 
         
     # Построение проекций ВЭКГ:
-    if  plot_projections:
-        plt.figure(figsize=(15, 5), dpi=70)
-        plt.subplot(1, 3, 1)
-        plt.plot(df_term.x,df_term.y)
-        plt.title('Фронтальная плоскость')
-        plt.xlabel('X')
-        plt.ylabel('Y')
+    if plot_projections:
+        # Создаем подразделы для графиков
+        fig = make_subplots(rows=1, cols=3, subplot_titles=['Фронтальная плоскость',
+                                                            'Сагиттальная плоскость',
+                                                            'Аксиальная плоскость'])
 
-        plt.subplot(1, 3, 2)
-        plt.plot(df_term.y,df_term.z)
-        plt.title('Сагиттальная плоскость')
-        plt.xlabel('Y')
-        plt.ylabel('Z')
+        # График фронтальной плоскости
+        trace1 = go.Scatter(x=df_term['x'], y=df_term['y'], mode='lines', showlegend=False)
+        fig.add_trace(trace1, row=1, col=1)
+        fig.update_xaxes(title_text='X', row=1, col=1)
+        fig.update_yaxes(title_text='Y', row=1, col=1)
 
-        plt.subplot(1, 3, 3)
-        plt.plot(df_term.x, df_term.z)
-        plt.title('Аксиальная плоскость')  
-        plt.xlabel('X')
-        plt.ylabel('Z')
-        plt.show()
+        # График сагиттальной плоскости
+        trace2 = go.Scatter(x=df_term['y'], y=df_term['z'], mode='lines', showlegend=False)
+        fig.add_trace(trace2, row=1, col=2)
+        fig.update_xaxes(title_text='Y', row=1, col=2)
+        fig.update_yaxes(title_text='Z', row=1, col=2)
+
+        # График аксиальной плоскости
+        trace3 = go.Scatter(x=df_term['x'], y=df_term['z'], mode='lines', showlegend=False)
+        fig.add_trace(trace3, row=1, col=3)
+        fig.update_xaxes(title_text='X', row=1, col=3)
+        fig.update_yaxes(title_text='Z', row=1, col=3)
+
+        # Настроим макет и отобразим графики
+        fig.update_layout(height=510, width=1300, title_text="Проекции ВЭКГ на главные плоскости")
+        fig.show()
+
 
     # Интерактивное 3D отображение
     if plot_3D:
-        fig = px.scatter_3d(df_term, x='x', y='y', z='z', size='size', size_max=10, opacity=1)
-        fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
-        fig.show()
+        show_3d(df_term.x,df_term.y,df_term.z)
+        
 
     # Работа при указании одного периода ЭКГ: 
     if  n_term_finish == None or n_term_finish == n_term_start:
@@ -536,7 +642,8 @@ def get_VECG(input_data: dict):
 
             # Производим ресемплирование каждой координаты
             for i in range(3):
-                point_cloud_array[:, i] = discrete_signal_resample_for_DL(point_cloud_array_innitial[:, i], Fs_new, 700)
+                point_cloud_array[:, i] = discrete_signal_resample_for_DL(point_cloud_array_innitial[:, i],
+                                                                          Fs_new, 700)
 
             # Трансформация входных данных
             val_transforms = transforms.Compose([
@@ -550,8 +657,10 @@ def get_VECG(input_data: dict):
 
             pointnet = PointNet().double()
             # Загрузка сохраненных весов модели
-            pointnet.load_state_dict(torch.load('models_for_inference/pointnet.pth', map_location=torch.device('cpu')))
+            pointnet.load_state_dict(torch.load('models_for_inference/pointnet.pth',
+                                                map_location=torch.device('cpu')))
             pointnet.eval().to('cpu')
+
             # инференс:
             with torch.no_grad():
                 outputs, __, __ = pointnet(inputs.transpose(1,2))
@@ -565,7 +674,7 @@ def get_VECG(input_data: dict):
                 message_predict = f'Болен с вероятностью {probabilities.item() * 100:.2f}%'
             #print(message_predict)
 
-        
+        # Задание ответов по умолчанию
         area_projections = None
         angle_qrst = None
         angle_qrst_front = None
@@ -581,11 +690,13 @@ def get_VECG(input_data: dict):
             angle_qrst = find_qrst_angle(mean_qrs, mean_t)
             angle_qrst_front = find_qrst_angle(mean_qrs[:2], mean_t[:2],
                                                name='во фронтальной плоскости ')
-
-           
-    # Выключаем интерактивный режим, чтобы окна графиков не закрывались сразу
-    plt.ioff()
-    plt.show()
+            
+            # Отображение трехмерного угла QRST
+            if show_angle:
+                df_qrs = preprocessing_3d(mean_qrs)
+                df_t = preprocessing_3d(mean_t)
+                angle_3d_plot(df_qrs, df_t, df_term)
+    
 
     return area_projections, angle_qrst, angle_qrst_front, message_predict
 
