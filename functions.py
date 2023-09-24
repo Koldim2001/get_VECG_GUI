@@ -135,7 +135,7 @@ def find_mean(df_term):
 
 def find_qrst_angle(mean_qrs, mean_t, name=''):
     """
-    Осуществление ресемплирования перед DL инференсом
+    Определение угла QRST
     """
     # Преобразуем списки в numpy массивы
     mean_qrs = np.array(mean_qrs)
@@ -184,12 +184,12 @@ def loop(df_term, name, show=False):
                                                                 'Сагиттальная плоскость',
                                                                 'Аксиальная плоскость'))
 
-        # Создаем трехмерные графики для каждой плоскости
-        trace1 = go.Scatter(x=df_term['x'], y=df_term['y'], mode='lines',
+        # Создаем графики для каждой плоскости
+        trace1 = go.Scatter(x=df_term['y'], y=df_term['z'], mode='lines',
                             name='Фронтальная плоскость', showlegend=False)
-        trace2 = go.Scatter(x=df_term['y'], y=df_term['z'], mode='lines',
+        trace2 = go.Scatter(x=df_term['x'], y=df_term['z'], mode='lines',
                             name='Сагиттальная плоскость', showlegend=False)
-        trace3 = go.Scatter(x=df_term['x'], y=df_term['z'], mode='lines',
+        trace3 = go.Scatter(x=df_term['y'], y=df_term['x'], mode='lines',
                             name='Аксиальная плоскость', showlegend=False)
 
         # Добавляем графики в подокно
@@ -204,15 +204,15 @@ def loop(df_term, name, show=False):
         # Отображение графика
         fig.show()
     
-    points = list(zip(df_term['x'], df_term['y']))
+    points = list(zip(df_term['y'], df_term['z']))
     area_inside_loop_1 = calculate_area(points)
     #print(f"Площадь петли {name_loop} во фронтальной плоскости:", area_inside_loop_1)
 
-    points = list(zip(df_term['y'], df_term['z']))
+    points = list(zip(df_term['x'], df_term['z']))
     area_inside_loop_2 = calculate_area(points)
     #print(f"Площадь петли {name_loop} в сагиттальной плоскости:", area_inside_loop_2)
 
-    points = list(zip(df_term['x'], df_term['z']))
+    points = list(zip(df_term['y'], df_term['x']))
     area_inside_loop_3 = calculate_area(points)
     #print(f"Площадь петли {name_loop} в аксиальной плоскости:", area_inside_loop_3)
 
@@ -313,7 +313,7 @@ def angle_3d_plot(df1, df2, df3):
             name='ВЭКГ'
         )
     )
-    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), title_text="Угол QRS в пространстве")
+    fig.update_layout(title_text="Угол QRST")
     fig.show()
 
 
@@ -354,9 +354,15 @@ def get_VECG(input_data: dict):
     mean_filter = input_data["mean_filter"]
     predict_res = input_data["predict"]
     plot_projections = input_data["plot_projections"]
+    logs = input_data["logs"]
     show_loops = False
     show_angle = False
     show_detect_pqrst = False
+    if logs:
+        show_loops = True
+        show_angle = True
+        show_detect_pqrst = True
+
 
 
     # Устанавливаем фильтр для игнорирования всех RuntimeWarning
@@ -523,6 +529,15 @@ def get_VECG(input_data: dict):
                             name=f'{wave_type_label} Peak'
                         ))
 
+        # Настройка макета и отображение графика
+        fig.update_layout(
+            xaxis=dict(range=[2, 5], title='Time (seconds)'),
+            yaxis=dict(title='Signal ECG I'),
+            title=f'Детекция PQRST на {n_otvedenie} отведении'
+        )
+        fig.show()
+
+
     # Выбор исследуемого периода/периодов
     i = n_term
     if type(i) == list:
@@ -603,22 +618,22 @@ def get_VECG(input_data: dict):
                                                             'Аксиальная плоскость'])
 
         # График фронтальной плоскости
-        trace1 = go.Scatter(x=df_term['x'], y=df_term['y'], mode='lines', showlegend=False)
+        trace1 = go.Scatter(x=df_term['y'], y=df_term['z'], mode='lines', showlegend=False)
         fig.add_trace(trace1, row=1, col=1)
-        fig.update_xaxes(title_text='X', row=1, col=1)
-        fig.update_yaxes(title_text='Y', row=1, col=1)
+        fig.update_xaxes(title_text='Y', row=1, col=1)
+        fig.update_yaxes(title_text='Z', row=1, col=1)
 
         # График сагиттальной плоскости
-        trace2 = go.Scatter(x=df_term['y'], y=df_term['z'], mode='lines', showlegend=False)
+        trace2 = go.Scatter(x=df_term['x'], y=df_term['z'], mode='lines', showlegend=False)
         fig.add_trace(trace2, row=1, col=2)
-        fig.update_xaxes(title_text='Y', row=1, col=2)
+        fig.update_xaxes(title_text='X', row=1, col=2)
         fig.update_yaxes(title_text='Z', row=1, col=2)
 
         # График аксиальной плоскости
-        trace3 = go.Scatter(x=df_term['x'], y=df_term['z'], mode='lines', showlegend=False)
+        trace3 = go.Scatter(x=df_term['y'], y=df_term['x'], mode='lines', showlegend=False)
         fig.add_trace(trace3, row=1, col=3)
-        fig.update_xaxes(title_text='X', row=1, col=3)
-        fig.update_yaxes(title_text='Z', row=1, col=3)
+        fig.update_xaxes(title_text='Y', row=1, col=3)
+        fig.update_yaxes(title_text='X', row=1, col=3)
 
         # Настроим макет и отобразим графики
         fig.update_layout(height=510, width=1300, title_text="Проекции ВЭКГ на главные плоскости")
@@ -711,7 +726,7 @@ def get_VECG(input_data: dict):
         # Определение угла QRST:
         if count_qrst_angle:
             angle_qrst = find_qrst_angle(mean_qrs, mean_t)
-            angle_qrst_front = find_qrst_angle(mean_qrs[:2], mean_t[:2],
+            angle_qrst_front = find_qrst_angle(mean_qrs[1:], mean_t[1:],
                                                name='во фронтальной плоскости ')
             
             # Отображение трехмерного угла QRST
@@ -742,4 +757,5 @@ if __name__ == "__main__":
     input_data["mean_filter"] = True
     input_data["predict"] = True
     input_data["plot_projections"] = True
+    input_data["logs"] = True
     get_VECG(input_data)
