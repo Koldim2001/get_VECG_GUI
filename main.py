@@ -227,12 +227,14 @@ def main(config: dict) -> None:
                                            command=toggle_f_sreza_entry)
     filt_value_check.grid(row=1, column=0, columnspan=2)
 
-
-    logs = tkinter.BooleanVar(value=config['logs'])
-    logs_value_check = tkinter.Checkbutton(settings_frame, text= "Показ логов обработки",
-                                           variable=logs, onvalue=True, offvalue=False)
-    logs_value_check.grid(row=2, column=0, columnspan=2)
- 
+    if config['dev_mode']:
+        # Показ логов обраьотки при выборе режима разработчика в конфигурации
+        logs = tkinter.BooleanVar(value=config['logs'])
+        logs_value_check = tkinter.Checkbutton(settings_frame, text= "Показ логов обработки",
+                                            variable=logs, onvalue=True, offvalue=False)
+        logs_value_check.grid(row=2, column=0, columnspan=2)
+    else:
+        logs = tkinter.BooleanVar(False)
 
     Fs_label = tkinter.Label(settings_frame, text="Частота дискретизации (в Гц)")
     Fs_label.grid(row=3, column=0, padx=22, pady=2)
