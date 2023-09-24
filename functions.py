@@ -358,11 +358,11 @@ def get_VECG(input_data: dict):
     show_loops = False
     show_angle = False
     show_detect_pqrst = False
-     
     if logs:
         show_loops = True
         show_angle = True
         show_detect_pqrst = True
+
 
 
     # Устанавливаем фильтр для игнорирования всех RuntimeWarning
