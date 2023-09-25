@@ -191,7 +191,7 @@ def loop(df_term, name, show=False):
                             name='Сагиттальная плоскость', showlegend=False)
         trace3 = go.Scatter(x=df_term['y'], y=df_term['x'], mode='lines',
                             name='Аксиальная плоскость', showlegend=False)
-
+        
         # Добавляем графики в подокно
         fig.add_trace(trace1, row=1, col=1)
         fig.add_trace(trace2, row=1, col=2)
@@ -200,6 +200,10 @@ def loop(df_term, name, show=False):
         # Установка общего заголовка
         title = f'{name_loop} петля'
         fig.update_layout(title_text=title, title_font_size=16, height=510, width=1300,)
+
+        # Переворачиваем оси 
+        fig.update_xaxes(autorange="reversed", row=1, col=2)  # Переворачиваем ось x для trace2
+        fig.update_yaxes(autorange="reversed", row=1, col=3)   # Переворачиваем ось y для trace3
 
         # Отображение графика
         fig.show()
@@ -637,6 +641,11 @@ def get_VECG(input_data: dict):
 
         # Настроим макет и отобразим графики
         fig.update_layout(height=510, width=1300, title_text="Проекции ВЭКГ на главные плоскости")
+
+        # Переворачиваем оси 
+        fig.update_xaxes(autorange="reversed", row=1, col=2)  # Переворачиваем ось x для trace2
+        fig.update_yaxes(autorange="reversed", row=1, col=3)   # Переворачиваем ось y для trace3
+
         fig.show()
 
 
@@ -707,9 +716,9 @@ def get_VECG(input_data: dict):
                 probabilities, predicted_class = torch.max(softmax_outputs, 1)
 
             if predicted_class == 0:
-                message_predict = f'Здоров с вероятностью {probabilities.item() * 100:.2f}%'
+                message_predict = f'Здоров (уверенность предсказания {probabilities.item() * 100:.2f}%)'
             else:
-                message_predict = f'Болен с вероятностью {probabilities.item() * 100:.2f}%'
+                message_predict = f'Болен (уверенность предсказания {probabilities.item() * 100:.2f}%)'
             #print(message_predict)
 
         # Задание ответов по умолчанию
