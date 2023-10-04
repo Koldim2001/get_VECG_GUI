@@ -34,7 +34,7 @@ python main.py
 ## __Окна программы:__
 #### Главное окно приложения:
 <div style="text-align:center;">
-  <img src="https://drive.google.com/uc?id=1M1CS_xz3bp2w5g-34Dp01bDSXqz0sWIB" alt="normal" width="350" height="500">
+  <img src="https://drive.google.com/uc?id=1M1CS_xz3bp2w5g-34Dp01bDSXqz0sWIB" alt="normal" width="310" height="500">
 </div>
 
 
