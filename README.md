@@ -55,3 +55,6 @@ python main.py
 pip install pyinstaller
 pyinstaller --onefile -w --icon=configs/logo.ico main.py
 ```
+<div style="text-align:center;">
+  <img src="https://drive.google.com/uc?id=15zXrkRTfBcVQ-WGCkvp6QqQ-p_z98ETx" alt="pathology" width="150" height="150">
+</div>
