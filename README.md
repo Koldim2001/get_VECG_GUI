@@ -6,7 +6,7 @@
 
 Код позвляет получать проекции и 3D представление ВЭКГ из исходных ЭКГ сигналов формата EDF, реализовывать систему поддержкии принятия решений (болен/здоров) на основе векторных петель, а так же определять информативные параметры данных петель.
 
-Подробный pdf отчет доступен по ссылке - [__ОТЧЕТ__](https://github.com/Koldim2001/vector_ECG/blob/main/utils/Отчет%20по%20проекту%20get_VECG.pdf) <br/>
+Подробный pdf отчет доступен по ссылке - [__ОТЧЕТ__](https://github.com/Koldim2001/get_VECG_GUI/blob/main/Отчет%20о%20разработке.pdf) <br/>
 Видео туториал доступен по ссылке - [__Презентация программы__]()<br/>
 
 ---
@@ -40,13 +40,13 @@ python main.py
 
 #### Окна результатов обработки :
 <div style="text-align:center;">
-  <img src="https://drive.google.com/uc?id=1_0V8p5O-BlNBguF73Ja2bUhPGm3RNgRD" alt="pathology" width="900" height="400">
+  <img src="https://drive.google.com/uc?id=1_0V8p5O-BlNBguF73Ja2bUhPGm3RNgRD" alt="pathology" width="900" height="500">
 </div>
 
 
 #### Окна промежуточных графических результатов обработки  :
 <div style="text-align:center;">
-  <img src="https://drive.google.com/uc?id=1zcntOImsxq99UwPvOOS4bfcm0d0OnEkY" alt="pathology" width="700" height="700">
+  <img src="https://drive.google.com/uc?id=1zcntOImsxq99UwPvOOS4bfcm0d0OnEkY" alt="pathology" width="550" height="700">
 </div>
  
 ---
