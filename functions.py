@@ -89,11 +89,7 @@ def discrete_signal_resample_for_DL(signal, old_sampling_rate, new_sampling_rate
     """
     Осуществление ресемплирования перед DL инференсом
     """
-    # Вычисляем коэффициент, определяющий отношение новой частоты к старой
-    resample_factor = new_sampling_rate / old_sampling_rate
-
-    # Количество точек в новой дискретизации
-    num_points_new = int(len(signal) * resample_factor)
+    num_points_new = int(len(signal) * new_sampling_rate / old_sampling_rate)
 
     # Используем scipy.signal.resample для изменения дискретизации
     new_signal = scipy.signal.resample(signal, num_points_new)
@@ -683,6 +679,7 @@ def get_VECG(input_data: dict):
             
             # Приведем к дискретизации 700 Гц на котором обучалась сеть
             new_num_points = int(len(point_cloud_array_innitial) * 700 / Fs_new)
+            
 
             # Инициализируем новый массив
             point_cloud_array = np.zeros((new_num_points, 3))
@@ -726,11 +723,11 @@ def get_VECG(input_data: dict):
         angle_qrst = None
         angle_qrst_front = None
 
-
-        # Поиск площадей при задании на исследование одного периодка ЭКГ:
-        area_projections , mean_qrs, mean_t = get_area(show=show_loops, df=df,
-                                                       waves_peak=waves_peak, start=start,
-                                                       Fs_new=Fs_new,  QRS=QRS_loop_area, 
+        if count_qrst_angle or T_loop_area or QRS_loop_area:
+            # Поиск площадей при задании на исследование одного периодка ЭКГ:
+            area_projections , mean_qrs, mean_t = get_area(show=show_loops, df=df,
+                                                        waves_peak=waves_peak, start=start,
+                                                        Fs_new=Fs_new,  QRS=QRS_loop_area, 
                                                        T=T_loop_area)
         # Определение угла QRST:
         if count_qrst_angle:
